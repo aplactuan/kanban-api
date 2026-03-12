@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -7,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 // POST /api/register
 // POST /api/login
 // POST /api/logout
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // Versioned API (v1)
 Route::prefix('v1')->group(function () {
