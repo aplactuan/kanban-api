@@ -26,7 +26,8 @@ class BoardRepository implements BoardRepositoryInterface
 
     public function update(Board $board, array $attributes): Board
     {
-        $board->update($attributes);
+        $safeAttributes = array_diff_key($attributes, array_flip(['user_id']));
+        $board->update($safeAttributes);
 
         return $board->refresh();
     }
