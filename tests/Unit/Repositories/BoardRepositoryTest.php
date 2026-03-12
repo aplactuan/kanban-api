@@ -1,0 +1,44 @@
+<?php
+
+namespace Tests\Unit\Repositories;
+
+use App\Models\Board;
+use App\Models\User;
+use App\Repositories\Eloquent\BoardRepository;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class BoardRepositoryTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_it_returns_only_boards_for_the_given_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        Board::factory()->count(2)->for($user)->create();
+        Board::factory()->count(3)->for($otherUser)->create();
+
+        $repository = new BoardRepository;
+
+        $boards = $repository->getAllForUser($user);
+
+        $this->assertCount(2, $boards);
+        $this->assertTrue($boards->every(fn (Board $board) => $board->user_id === $user->id));
+    }
+
+    public function test_it_throws_when_board_is_not_owned_by_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $board = Board::factory()->for($otherUser)->create();
+
+        $repository = new BoardRepository;
+
+        $this->expectException(ModelNotFoundException::class);
+
+        $repository->findForUserByIdOrFail($user, $board->id);
+    }
+}
