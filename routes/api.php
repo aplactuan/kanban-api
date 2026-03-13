@@ -6,6 +6,10 @@ use App\Http\Controllers\Board\IndexBoardController;
 use App\Http\Controllers\Board\ShowBoardController;
 use App\Http\Controllers\Board\StoreBoardController;
 use App\Http\Controllers\Board\UpdateBoardController;
+use App\Http\Controllers\Column\DestroyBoardColumnController;
+use App\Http\Controllers\Column\IndexBoardColumnController;
+use App\Http\Controllers\Column\StoreBoardColumnController;
+use App\Http\Controllers\Column\UpdateBoardColumnController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,5 +33,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/boards/{board}', ShowBoardController::class);
         Route::put('/boards/{board}', UpdateBoardController::class);
         Route::delete('/boards/{board}', DestroyBoardController::class);
+
+        Route::get('/boards/{board}/columns', IndexBoardColumnController::class);
+        Route::post('/boards/{board}/columns', StoreBoardColumnController::class);
+        Route::put('/boards/{board}/columns/{column}', UpdateBoardColumnController::class);
+        Route::delete('/boards/{board}/columns/{column}', DestroyBoardColumnController::class);
     });
 });
