@@ -38,7 +38,7 @@ A step-by-step plan for building the Kanban clone backend API. The project uses 
 | 3.1 | Column model | Create `Column` model with `board_id`, `name`, `position` (for ordering) |
 | 3.2 | Migration | Create `columns` table (`id`, `board_id`, `name`, `position`, `timestamps`) |
 | 3.3 | Relationships | `Board hasMany Column`, `Column belongsTo Board` |
-| 3.4 | Column controller | Create `ColumnController` with CRUD (scoped to a board) |
+| 3.4 | Column controller | Create invokable single Controller for Column CRUD operation (scoped to a board) |
 | 3.5 | Column API routes | Add versioned routes under `v1` |
 | 3.6 | Reordering | Optional: endpoint to update `position` for drag-and-drop |
 
