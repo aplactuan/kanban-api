@@ -10,6 +10,11 @@ use App\Http\Controllers\Column\DestroyBoardColumnController;
 use App\Http\Controllers\Column\IndexBoardColumnController;
 use App\Http\Controllers\Column\StoreBoardColumnController;
 use App\Http\Controllers\Column\UpdateBoardColumnController;
+use App\Http\Controllers\Task\DestroyColumnTaskController;
+use App\Http\Controllers\Task\IndexColumnTaskController;
+use App\Http\Controllers\Task\MoveTaskController;
+use App\Http\Controllers\Task\StoreColumnTaskController;
+use App\Http\Controllers\Task\UpdateColumnTaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,5 +43,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/boards/{board}/columns', StoreBoardColumnController::class);
         Route::put('/boards/{board}/columns/{column}', UpdateBoardColumnController::class);
         Route::delete('/boards/{board}/columns/{column}', DestroyBoardColumnController::class);
+
+        Route::get('/boards/{board}/columns/{column}/tasks', IndexColumnTaskController::class);
+        Route::post('/boards/{board}/columns/{column}/tasks', StoreColumnTaskController::class);
+        Route::put('/boards/{board}/columns/{column}/tasks/{task}', UpdateColumnTaskController::class);
+        Route::delete('/boards/{board}/columns/{column}/tasks/{task}', DestroyColumnTaskController::class);
+        Route::patch('/tasks/{task}/move', MoveTaskController::class);
     });
 });
