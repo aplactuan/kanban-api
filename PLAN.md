@@ -51,7 +51,7 @@ A step-by-step plan for building the Kanban clone backend API. The project uses 
 | 4.1 | Task model | Create `Task` model with `column_id`, `title`, `description` (optional), `position` |
 | 4.2 | Migration | Create `tasks` table (`id`, `column_id`, `title`, `description`, `position`, `timestamps`) |
 | 4.3 | Relationships | `Column hasMany Task`, `Task belongsTo Column` |
-| 4.4 | Task controller | Create `TaskController` with CRUD (scoped to a column) |
+| 4.4 | Task controller | Create Single responsibilty for task CRUD (scoped to a column) using invokable controllers |
 | 4.5 | Task API routes | Add versioned routes under `v1` |
 | 4.6 | Move task | Optional: `PATCH /api/v1/tasks/{task}/move` to move a task between columns |
 
