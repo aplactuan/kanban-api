@@ -1,61 +1,169 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Kanban API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+<p>
+  <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT">
 </p>
 
-## About Laravel
+A **RESTful API** for a Kanban-style task board: boards, columns, and tasks with token-based auth, versioned endpoints, and optional nested responses. Built with **Laravel 12** and **Sanctum**.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Highlights
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **RESTful & versioned** — `POST /api/register`, `GET /api/v1/boards`, nested routes for columns and tasks
+- **Token auth** — Laravel Sanctum; register, login, logout with API tokens
+- **Nested responses** — `?include=columns` or `?include=columns.tasks` for one-shot board + columns + tasks
+- **Consistent API design** — Laravel API Resources, Form Request validation, unified JSON error format (401, 404, 422)
+- **Clean architecture** — Repository pattern, single-action (invokable) controllers, dependency injection
+- **Tested** — Feature tests for auth and CRUD, unit tests for repositories
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Layer | Choice |
+|-------|--------|
+| Framework | Laravel 12 |
+| Auth | Laravel Sanctum (API tokens) |
+| PHP | 8.2+ |
+| Database | MySQL / MariaDB (configurable) |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## API at a Glance
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Auth (unversioned)
 
-### Premium Partners
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/register` | Register; returns user + token |
+| `POST` | `/api/login` | Login; returns user + token |
+| `POST` | `/api/logout` | Revoke current token *(requires auth)* |
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Versioned API (v1) — all require `Authorization: Bearer {token}`
 
-## Contributing
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/user` | Current user |
+| `GET` | `/api/v1/boards` | List boards *(supports `?include=columns,columns.tasks`)* |
+| `POST` | `/api/v1/boards` | Create board |
+| `GET` | `/api/v1/boards/{id}` | Get board *(supports `?include=columns,columns.tasks`)* |
+| `PUT` | `/api/v1/boards/{id}` | Update board |
+| `DELETE` | `/api/v1/boards/{id}` | Delete board |
+| `GET` | `/api/v1/boards/{board}/columns` | List columns *(supports `?include=tasks`)* |
+| `POST` | `/api/v1/boards/{board}/columns` | Create column |
+| `PUT` | `/api/v1/boards/{board}/columns/{column}` | Update column |
+| `DELETE` | `/api/v1/boards/{board}/columns/{column}` | Delete column |
+| `GET` | `/api/v1/boards/{board}/columns/{column}/tasks` | List tasks |
+| `POST` | `/api/v1/boards/{board}/columns/{column}/tasks` | Create task |
+| `PUT` | `/api/v1/boards/{board}/columns/{column}/tasks/{task}` | Update task |
+| `DELETE` | `/api/v1/boards/{board}/columns/{column}/tasks/{task}` | Delete task |
+| `PATCH` | `/api/v1/tasks/{task}/move` | Move task to another column |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Example: full board in one request
 
-## Code of Conduct
+```http
+GET /api/v1/boards/1?include=columns.tasks
+Authorization: Bearer {your-token}
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Response includes the board with nested `columns`, each with nested `tasks`.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Getting Started
+
+### Requirements
+
+- PHP 8.2+
+- Composer
+- MySQL / MariaDB (or SQLite for local dev)
+
+### Install & run
+
+```bash
+git clone <repo-url> kanban-api && cd kanban-api
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure `.env` (e.g. `DB_CONNECTION`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), then:
+
+```bash
+php artisan migrate
+php artisan serve
+```
+
+API base: `http://localhost:8000/api`
+
+### Quick smoke test
+
+```bash
+# Register
+curl -X POST http://localhost:8000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo","email":"demo@example.com","password":"password","password_confirmation":"password"}'
+
+# Use the returned token for authenticated requests
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8000/api/v1/boards
+```
+
+---
+
+## Testing
+
+```bash
+composer test
+# or
+php artisan test
+```
+
+- **Feature:** Auth (register, login, logout), Board CRUD, Column CRUD, Task CRUD
+- **Unit:** Repository layer (Board, Column, Task)
+
+---
+
+## Project Structure (high level)
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── AuthController.php
+│   │   ├── Board/          # Index, Store, Show, Update, Destroy
+│   │   ├── Column/         # Index, Store, Update, Destroy (scoped to board)
+│   │   ├── Task/           # Index, Store, Update, Destroy, Move (scoped to column)
+│   │   └── Concerns/
+│   │       └── ParsesIncludes.php   # ?include= parsing for nested responses
+│   ├── Requests/           # Form Requests per action (validation)
+│   └── Resources/          # BoardResource, ColumnResource, TaskResource
+├── Models/                 # User, Board, Column, Task
+└── Repositories/
+    ├── Contracts/          # BoardRepositoryInterface, etc.
+    └── Eloquent/          # Implementations
+```
+
+- **Single-responsibility controllers** — one invokable class per action; routes map directly to controller classes.
+- **Repository pattern** — controllers depend on repository interfaces; persistence is swappable and testable.
+- **API Resources** — consistent JSON shape; nested data via `whenLoaded()` and optional `?include=` query.
+
+---
+
+## Error responses
+
+All API errors return JSON with a `message` (and `errors` for validation):
+
+| Status | When |
+|--------|------|
+| `401` | Missing or invalid token → `{"message": "Unauthenticated."}` |
+| `404` | Board/column/task not found or not owned → `{"message": "Resource not found."}` |
+| `422` | Validation failed → `{"message": "...", "errors": { "field": ["..."] }}` |
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced under the [MIT License](https://opensource.org/licenses/MIT).
