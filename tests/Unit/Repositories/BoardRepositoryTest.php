@@ -13,6 +13,23 @@ class BoardRepositoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_it_attaches_owner_membership_when_creating_board(): void
+    {
+        $user = User::factory()->create();
+        $repository = new BoardRepository;
+
+        $board = $repository->createForUser($user, [
+            'name' => 'Planning',
+            'description' => 'Team planning board',
+        ]);
+
+        $this->assertDatabaseHas('board_members', [
+            'board_id' => $board->id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+        ]);
+    }
+
     public function test_it_returns_only_boards_for_the_given_user(): void
     {
         $user = User::factory()->create();

@@ -29,6 +29,11 @@ class BoardApiTest extends TestCase
 
         $boardId = $createResponse->json('data.id');
         $this->assertIsInt($boardId);
+        $this->assertDatabaseHas('board_members', [
+            'board_id' => $boardId,
+            'user_id' => $user->id,
+            'role' => 'owner',
+        ]);
 
         $this->getJson('/api/v1/boards')
             ->assertOk()

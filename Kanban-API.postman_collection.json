@@ -1,0 +1,629 @@
+{
+	"info": {
+		"_postman_id": "kanban-api-collection",
+		"name": "Kanban API",
+		"description": "API collection for the Kanban application. Set `base_url` and use **Login** then **Get User** to obtain a token; authenticated requests use the `token` variable.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://kanban-api.test"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "board_id",
+			"value": "1"
+		},
+		{
+			"key": "column_id",
+			"value": "1"
+		},
+		{
+			"key": "task_id",
+			"value": "1"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "register"]
+						},
+						"description": "Register a new user. Returns user and token. Password must be at least 8 characters and confirmed."
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.token) {",
+									"        pm.collectionVariables.set('token', json.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "login"]
+						},
+						"description": "Login with email and password. On success, the response token is saved to the collection variable `token` for authenticated requests."
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logout"]
+						},
+						"description": "Logout the current user (invalidates token). Requires Bearer token."
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/user",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user"]
+						},
+						"description": "Get the authenticated user. Requires Bearer token."
+					}
+				}
+			]
+		},
+		{
+			"name": "Boards",
+			"item": [
+				{
+					"name": "List Boards",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards"]
+						},
+						"description": "List all boards for the authenticated user."
+					}
+				},
+				{
+					"name": "Create Board",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My Board\",\n    \"description\": \"Optional description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards"]
+						},
+						"description": "Create a new board. Required: name. Optional: description."
+					}
+				},
+				{
+					"name": "Get Board",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}"]
+						},
+						"description": "Get a single board by ID."
+					}
+				},
+				{
+					"name": "Update Board",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Board Name\",\n    \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}"]
+						},
+						"description": "Update a board. All fields optional: name, description."
+					}
+				},
+				{
+					"name": "Delete Board",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}"]
+						},
+						"description": "Delete a board."
+					}
+				}
+			]
+		},
+		{
+			"name": "Columns",
+			"item": [
+				{
+					"name": "List Columns",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns"]
+						},
+						"description": "List all columns for a board."
+					}
+				},
+				{
+					"name": "Create Column",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"To Do\",\n    \"position\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns"]
+						},
+						"description": "Create a column on a board. Required: name. Optional: position (integer, min 1)."
+					}
+				},
+				{
+					"name": "Update Column",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"In Progress\",\n    \"position\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}"]
+						},
+						"description": "Update a column. Optional: name, position."
+					}
+				},
+				{
+					"name": "Delete Column",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}"]
+						},
+						"description": "Delete a column."
+					}
+				}
+			]
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "List Tasks",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}", "tasks"]
+						},
+						"description": "List all tasks in a column."
+					}
+				},
+				{
+					"name": "Create Task",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"New Task\",\n    \"description\": \"Optional description\",\n    \"position\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}", "tasks"]
+						},
+						"description": "Create a task in a column. Required: title. Optional: description, position (integer, min 1)."
+					}
+				},
+				{
+					"name": "Update Task",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Task Title\",\n    \"description\": \"Updated description\",\n    \"position\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}/tasks/{{task_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}", "tasks", "{{task_id}}"]
+						},
+						"description": "Update a task. Optional: title, description, position."
+					}
+				},
+				{
+					"name": "Delete Task",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/boards/{{board_id}}/columns/{{column_id}}/tasks/{{task_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "boards", "{{board_id}}", "columns", "{{column_id}}", "tasks", "{{task_id}}"]
+						},
+						"description": "Delete a task."
+					}
+				},
+				{
+					"name": "Move Task",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"column_id\": 2,\n    \"position\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/{{task_id}}/move",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tasks", "{{task_id}}", "move"]
+						},
+						"description": "Move a task to another column. Required: column_id (existing column ID), position (integer, min 1)."
+					}
+				}
+			]
+		}
+	]
+}
