@@ -16,7 +16,10 @@ class BoardRepository implements BoardRepositoryInterface
 
     public function createForUser(User $user, array $attributes): Board
     {
-        return $user->boards()->create($attributes);
+        $board = $user->boards()->create($attributes);
+        $board->members()->attach($user->id, ['role' => 'owner']);
+
+        return $board;
     }
 
     public function findForUserByIdOrFail(User $user, int $boardId): Board
