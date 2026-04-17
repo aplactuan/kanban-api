@@ -11,7 +11,15 @@ class BoardRepository implements BoardRepositoryInterface
 {
     public function getAllForUser(User $user): Collection
     {
-        return $user->boards()->latest()->get();
+        return Board::query()
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhereHas('members', function ($memberQuery) use ($user) {
+                        $memberQuery->where('user_id', $user->id);
+                    });
+            })
+            ->latest()
+            ->get();
     }
 
     public function createForUser(User $user, array $attributes): Board
@@ -24,7 +32,14 @@ class BoardRepository implements BoardRepositoryInterface
 
     public function findForUserByIdOrFail(User $user, int $boardId): Board
     {
-        return $user->boards()->whereKey($boardId)->firstOrFail();
+        return Board::query()
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhereHas('members', function ($memberQuery) use ($user) {
+                        $memberQuery->where('user_id', $user->id);
+                    });
+            })
+            ->findOrFail($boardId);
     }
 
     public function update(Board $board, array $attributes): Board
