@@ -35,7 +35,12 @@ class TaskRepository implements TaskRepositoryInterface
         return Task::query()
             ->whereKey($taskId)
             ->whereHas('column.board', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where(function ($boardQuery) use ($user) {
+                    $boardQuery->where('user_id', $user->id)
+                        ->orWhereHas('members', function ($memberQuery) use ($user) {
+                            $memberQuery->where('user_id', $user->id);
+                        });
+                });
             })
             ->firstOrFail();
     }
