@@ -4,7 +4,6 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Column;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 interface TaskRepositoryInterface
@@ -21,7 +20,7 @@ interface TaskRepositoryInterface
 
     public function findForColumnByIdOrFail(Column $column, int $taskId): Task;
 
-    public function findForUserByIdOrFail(User $user, int $taskId): Task;
+    public function findByIdOrFail(int $taskId): Task;
 
     /**
      * @param  array{title?: string, description?: string|null, position?: int}  $attributes

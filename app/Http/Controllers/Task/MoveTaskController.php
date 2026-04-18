@@ -5,29 +5,30 @@ namespace App\Http\Controllers\Task;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MoveTaskRequest;
 use App\Http\Resources\TaskResource;
-use App\Models\User;
-use App\Repositories\Contracts\ColumnRepositoryInterface;
+use App\Models\Column;
+use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 
 class MoveTaskController extends Controller
 {
     public function __construct(
-        private ColumnRepositoryInterface $columnRepository,
         private TaskRepositoryInterface $taskRepository
     ) {}
 
-    public function __invoke(MoveTaskRequest $request, int $task): TaskResource
+    public function __invoke(MoveTaskRequest $request, Task $task): TaskResource
     {
         /** @var array{column_id: int, position: int} $validated */
         $validated = $request->validated();
 
-        /** @var User $user */
-        $user = $request->user();
+        $task->loadMissing('column.board');
 
-        $existingTask = $this->taskRepository->findForUserByIdOrFail($user, $task);
-        $targetColumn = $this->columnRepository->findForBoardByIdOrFail($existingTask->column->board, $validated['column_id']);
+        $this->authorize('update', $task);
 
-        $movedTask = $this->taskRepository->move($existingTask, $targetColumn, $validated['position']);
+        $targetColumn = Column::query()->findOrFail($validated['column_id']);
+
+        $this->authorize('move', [$task, $targetColumn]);
+
+        $movedTask = $this->taskRepository->move($task, $targetColumn, $validated['position']);
 
         return new TaskResource($movedTask);
     }

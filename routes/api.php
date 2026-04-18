@@ -3,6 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Board\DestroyBoardController;
 use App\Http\Controllers\Board\IndexBoardController;
+use App\Http\Controllers\Board\Member\IndexBoardMemberController;
+use App\Http\Controllers\Board\Member\InviteBoardMemberController;
+use App\Http\Controllers\Board\Member\LeaveBoardController;
+use App\Http\Controllers\Board\Member\RemoveBoardMemberController;
+use App\Http\Controllers\Board\Member\TransferOwnershipController;
+use App\Http\Controllers\Board\Member\UpdateBoardMemberController;
 use App\Http\Controllers\Board\ShowBoardController;
 use App\Http\Controllers\Board\StoreBoardController;
 use App\Http\Controllers\Board\UpdateBoardController;
@@ -28,7 +34,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 
 // Versioned API (v1)
 Route::prefix('v1')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:sanctum')->scopeBindings()->group(function () {
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
@@ -38,6 +44,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/boards/{board}', ShowBoardController::class);
         Route::put('/boards/{board}', UpdateBoardController::class);
         Route::delete('/boards/{board}', DestroyBoardController::class);
+
+        Route::get('/boards/{board}/members', IndexBoardMemberController::class);
+        Route::delete('/boards/{board}/members/leave', LeaveBoardController::class);
+        Route::middleware('throttle:board-member-invite')->post('/boards/{board}/members', InviteBoardMemberController::class);
+        Route::middleware('throttle:board-member-remove')->delete('/boards/{board}/members/{member}', RemoveBoardMemberController::class);
+        Route::put('/boards/{board}/members/{member}', UpdateBoardMemberController::class);
+        Route::patch('/boards/{board}/members/{member}/transfer-ownership', TransferOwnershipController::class);
 
         Route::get('/boards/{board}/columns', IndexBoardColumnController::class);
         Route::post('/boards/{board}/columns', StoreBoardColumnController::class);

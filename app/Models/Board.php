@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\BoardRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Board extends Model
@@ -36,5 +37,28 @@ class Board extends Model
         return $this->belongsToMany(User::class, 'board_members')
             ->using(BoardMember::class)
             ->withPivot('role');
+    }
+
+    public function getUserRole(User $user): ?BoardRole
+    {
+        $member = $this->members()->whereKey($user->id)->first();
+
+        if ($member === null) {
+            return null;
+        }
+
+        $role = $member->pivot->role;
+
+        return $role instanceof BoardRole ? $role : BoardRole::tryFrom((string) $role);
+    }
+
+    public function userIsAtLeast(User $user, BoardRole $role): bool
+    {
+        return $this->getUserRole($user)?->isAtLeast($role) ?? false;
+    }
+
+    public function userIsMember(User $user): bool
+    {
+        return $this->getUserRole($user) !== null;
     }
 }

@@ -66,9 +66,9 @@ class BoardApiTest extends TestCase
 
         Sanctum::actingAs($authenticatedUser);
 
-        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id)->assertNotFound();
-        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id, ['name' => 'x'])->assertNotFound();
-        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id)->assertNotFound();
+        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id)->assertForbidden();
+        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id, ['name' => 'x'])->assertForbidden();
+        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id)->assertForbidden();
     }
 
     public function test_store_board_validates_required_fields(): void

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Board;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Board\StoreBoardRequest;
 use App\Http\Resources\BoardResource;
+use App\Models\Board;
 use App\Models\User;
 use App\Repositories\Contracts\BoardRepositoryInterface;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,8 @@ class StoreBoardController extends Controller
 
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('create', Board::class);
 
         $board = $this->boardRepository->createForUser($user, $validated);
 

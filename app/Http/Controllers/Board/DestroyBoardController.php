@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Board;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Board;
 use App\Repositories\Contracts\BoardRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,13 +12,11 @@ class DestroyBoardController extends Controller
 {
     public function __construct(private BoardRepositoryInterface $boardRepository) {}
 
-    public function __invoke(Request $request, int $board): Response
+    public function __invoke(Request $request, Board $board): Response
     {
-        /** @var User $user */
-        $user = $request->user();
+        $this->authorize('delete', $board);
 
-        $existingBoard = $this->boardRepository->findForUserByIdOrFail($user, $board);
-        $this->boardRepository->delete($existingBoard);
+        $this->boardRepository->delete($board);
 
         return response()->noContent();
     }
