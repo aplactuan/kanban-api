@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Column;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Repositories\Contracts\BoardRepositoryInterface;
+use App\Models\Board;
+use App\Models\Column;
 use App\Repositories\Contracts\ColumnRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,19 +12,14 @@ use Illuminate\Http\Response;
 class DestroyBoardColumnController extends Controller
 {
     public function __construct(
-        private BoardRepositoryInterface $boardRepository,
         private ColumnRepositoryInterface $columnRepository
     ) {}
 
-    public function __invoke(Request $request, int $board, int $column): Response
+    public function __invoke(Request $request, Board $board, Column $column): Response
     {
-        /** @var User $user */
-        $user = $request->user();
+        $this->authorize('delete', $column);
 
-        $existingBoard = $this->boardRepository->findForUserByIdOrFail($user, $board);
-        $existingColumn = $this->columnRepository->findForBoardByIdOrFail($existingBoard, $column);
-
-        $this->columnRepository->delete($existingColumn);
+        $this->columnRepository->delete($column);
 
         return response()->noContent();
     }

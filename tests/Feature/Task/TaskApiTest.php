@@ -68,11 +68,11 @@ class TaskApiTest extends TestCase
 
         Sanctum::actingAs($authenticatedUser);
 
-        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks')->assertNotFound();
-        $this->postJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks', ['title' => 'Blocked'])->assertNotFound();
-        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks/'.$otherUsersTask->id, ['title' => 'Blocked'])->assertNotFound();
-        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks/'.$otherUsersTask->id)->assertNotFound();
-        $this->patchJson('/api/v1/tasks/'.$otherUsersTask->id.'/move', ['column_id' => $otherUsersColumn->id, 'position' => 1])->assertNotFound();
+        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks')->assertForbidden();
+        $this->postJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks', ['title' => 'Blocked'])->assertForbidden();
+        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks/'.$otherUsersTask->id, ['title' => 'Blocked'])->assertForbidden();
+        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id.'/tasks/'.$otherUsersTask->id)->assertForbidden();
+        $this->patchJson('/api/v1/tasks/'.$otherUsersTask->id.'/move', ['column_id' => $otherUsersColumn->id, 'position' => 1])->assertForbidden();
     }
 
     public function test_user_cannot_modify_a_task_through_the_wrong_column_route(): void

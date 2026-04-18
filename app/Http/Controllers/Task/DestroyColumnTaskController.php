@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Task;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Repositories\Contracts\BoardRepositoryInterface;
-use App\Repositories\Contracts\ColumnRepositoryInterface;
+use App\Models\Board;
+use App\Models\Column;
+use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,21 +13,14 @@ use Illuminate\Http\Response;
 class DestroyColumnTaskController extends Controller
 {
     public function __construct(
-        private BoardRepositoryInterface $boardRepository,
-        private ColumnRepositoryInterface $columnRepository,
         private TaskRepositoryInterface $taskRepository
     ) {}
 
-    public function __invoke(Request $request, int $board, int $column, int $task): Response
+    public function __invoke(Request $request, Board $board, Column $column, Task $task): Response
     {
-        /** @var User $user */
-        $user = $request->user();
+        $this->authorize('delete', $task);
 
-        $existingBoard = $this->boardRepository->findForUserByIdOrFail($user, $board);
-        $existingColumn = $this->columnRepository->findForBoardByIdOrFail($existingBoard, $column);
-        $existingTask = $this->taskRepository->findForColumnByIdOrFail($existingColumn, $task);
-
-        $this->taskRepository->delete($existingTask);
+        $this->taskRepository->delete($task);
 
         return response()->noContent();
     }

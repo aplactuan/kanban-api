@@ -30,16 +30,9 @@ class BoardRepository implements BoardRepositoryInterface
         return $board;
     }
 
-    public function findForUserByIdOrFail(User $user, int $boardId): Board
+    public function findByIdOrFail(int $boardId): Board
     {
-        return Board::query()
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhereHas('members', function ($memberQuery) use ($user) {
-                        $memberQuery->where('user_id', $user->id);
-                    });
-            })
-            ->findOrFail($boardId);
+        return Board::query()->findOrFail($boardId);
     }
 
     public function update(Board $board, array $attributes): Board

@@ -63,10 +63,10 @@ class ColumnApiTest extends TestCase
 
         Sanctum::actingAs($authenticatedUser);
 
-        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns')->assertNotFound();
-        $this->postJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns', ['name' => 'Blocked'])->assertNotFound();
-        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id, ['name' => 'Blocked'])->assertNotFound();
-        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id)->assertNotFound();
+        $this->getJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns')->assertForbidden();
+        $this->postJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns', ['name' => 'Blocked'])->assertForbidden();
+        $this->putJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id, ['name' => 'Blocked'])->assertForbidden();
+        $this->deleteJson('/api/v1/boards/'.$otherUsersBoard->id.'/columns/'.$otherUsersColumn->id)->assertForbidden();
     }
 
     public function test_user_cannot_modify_a_column_through_the_wrong_board_route(): void

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Column;
 use App\Http\Controllers\Concerns\ParsesIncludes;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ColumnResource;
-use App\Models\User;
-use App\Repositories\Contracts\BoardRepositoryInterface;
+use App\Models\Board;
+use App\Models\Column;
 use App\Repositories\Contracts\ColumnRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -16,18 +16,14 @@ class IndexBoardColumnController extends Controller
     use ParsesIncludes;
 
     public function __construct(
-        private BoardRepositoryInterface $boardRepository,
         private ColumnRepositoryInterface $columnRepository
     ) {}
 
-    public function __invoke(Request $request, int $board): AnonymousResourceCollection
+    public function __invoke(Request $request, Board $board): AnonymousResourceCollection
     {
-        /** @var User $user */
-        $user = $request->user();
+        $this->authorize('viewAny', [Column::class, $board]);
 
-        $existingBoard = $this->boardRepository->findForUserByIdOrFail($user, $board);
-
-        $columns = $this->columnRepository->getAllForBoard($existingBoard);
+        $columns = $this->columnRepository->getAllForBoard($board);
 
         $relations = $this->parseIncludes($request, ['tasks']);
 

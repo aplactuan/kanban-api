@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Board;
 use App\Http\Controllers\Concerns\ParsesIncludes;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BoardResource;
+use App\Models\Board;
 use App\Models\User;
 use App\Repositories\Contracts\BoardRepositoryInterface;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class IndexBoardController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('viewAny', Board::class);
 
         $boards = $this->boardRepository->getAllForUser($user);
 

@@ -18,7 +18,7 @@ interface BoardRepositoryInterface
      */
     public function createForUser(User $user, array $attributes): Board;
 
-    public function findForUserByIdOrFail(User $user, int $boardId): Board;
+    public function findByIdOrFail(int $boardId): Board;
 
     /**
      * @param  array{name?: string, description?: string|null}  $attributes

@@ -6,18 +6,30 @@
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT">
 </p>
 
-A **RESTful API** for a Kanban-style task board: boards, columns, and tasks with token-based auth, versioned endpoints, and optional nested responses. Built with **Laravel 12** and **Sanctum**.
+A **RESTful API** for a multi-user Kanban-style task board: boards, columns, and tasks with **role-based access control (RBAC)**, board membership, token-based auth, versioned endpoints, and optional nested responses. Built with **Laravel 12** and **Sanctum**.
 
 ---
 
 ## Highlights
 
 - **RESTful & versioned** — `POST /api/register`, `GET /api/v1/boards`, nested routes for columns and tasks
+- **Multi-user boards** — `board_members` pivot with roles (`owner`, `admin`, `member`); invite by email; leave; ownership transfer
+- **RBAC** — Laravel policies enforce who can view boards, manage structure, manage members, and delete boards
 - **Token auth** — Laravel Sanctum; register, login, logout with API tokens
 - **Nested responses** — `?include=columns` or `?include=columns.tasks` for one-shot board + columns + tasks
-- **Consistent API design** — Laravel API Resources, Form Request validation, unified JSON error format (401, 404, 422)
+- **Consistent API design** — Laravel API Resources, Form Request validation, unified JSON error format (401, 403, 404, 422, 429)
 - **Clean architecture** — Repository pattern, single-action (invokable) controllers, dependency injection
-- **Tested** — Feature tests for auth and CRUD, unit tests for repositories
+- **Tested** — Feature tests for auth, CRUD, membership, RBAC, and throttles; unit tests for repositories
+
+---
+
+## Roles (boards)
+
+| Role | Capabilities (summary) |
+|------|-------------------------|
+| **owner** | Full control; only role that can delete the board or transfer ownership; cannot leave without transferring first |
+| **admin** | Update board metadata; manage columns/tasks; invite/remove **members**; cannot remove another admin or assign the admin role (owner only) |
+| **member** | View board; create/update/delete/move own-scope tasks; cannot manage columns, board settings, or membership |
 
 ---
 
@@ -47,20 +59,35 @@ A **RESTful API** for a Kanban-style task board: boards, columns, and tasks with
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/v1/user` | Current user |
-| `GET` | `/api/v1/boards` | List boards *(supports `?include=columns,columns.tasks`)* |
+| `GET` | `/api/v1/boards` | List boards you own or are a member of *(supports `?include=columns,columns.tasks`)* |
 | `POST` | `/api/v1/boards` | Create board |
-| `GET` | `/api/v1/boards/{id}` | Get board *(supports `?include=columns,columns.tasks`)* |
-| `PUT` | `/api/v1/boards/{id}` | Update board |
-| `DELETE` | `/api/v1/boards/{id}` | Delete board |
+| `GET` | `/api/v1/boards/{board}` | Get board *(supports `?include=columns,columns.tasks`)* |
+| `PUT` | `/api/v1/boards/{board}` | Update board *(admin+)* |
+| `DELETE` | `/api/v1/boards/{board}` | Delete board *(owner only)* |
+| `GET` | `/api/v1/boards/{board}/members` | List members and roles |
+| `POST` | `/api/v1/boards/{board}/members` | Invite user by email (`role`: `admin` or `member`, default `member`) *(admin+; throttled)* |
+| `PUT` | `/api/v1/boards/{board}/members/{member}` | Change a member’s role (`admin` or `member`) *(admin+; owner rules apply)* |
+| `DELETE` | `/api/v1/boards/{board}/members/{member}` | Remove a member *(admin+; throttled)* |
+| `DELETE` | `/api/v1/boards/{board}/members/leave` | Leave the board *(member/admin; owner must transfer first)* |
+| `PATCH` | `/api/v1/boards/{board}/members/{member}/transfer-ownership` | Transfer ownership to an existing member *(owner only)* |
 | `GET` | `/api/v1/boards/{board}/columns` | List columns *(supports `?include=tasks`)* |
-| `POST` | `/api/v1/boards/{board}/columns` | Create column |
-| `PUT` | `/api/v1/boards/{board}/columns/{column}` | Update column |
-| `DELETE` | `/api/v1/boards/{board}/columns/{column}` | Delete column |
+| `POST` | `/api/v1/boards/{board}/columns` | Create column *(admin+)* |
+| `PUT` | `/api/v1/boards/{board}/columns/{column}` | Update column *(admin+)* |
+| `DELETE` | `/api/v1/boards/{board}/columns/{column}` | Delete column *(admin+)* |
 | `GET` | `/api/v1/boards/{board}/columns/{column}/tasks` | List tasks |
 | `POST` | `/api/v1/boards/{board}/columns/{column}/tasks` | Create task |
 | `PUT` | `/api/v1/boards/{board}/columns/{column}/tasks/{task}` | Update task |
 | `DELETE` | `/api/v1/boards/{board}/columns/{column}/tasks/{task}` | Delete task |
-| `PATCH` | `/api/v1/tasks/{task}/move` | Move task to another column |
+| `PATCH` | `/api/v1/tasks/{task}/move` | Move task to another column on the same board |
+
+`{board}`, `{column}`, `{task}`, and `{member}` (user id scoped to board membership) use route model binding.
+
+### Rate limits (per authenticated user)
+
+- **Invite** (`POST .../members`) — 10 requests per minute  
+- **Remove member** (`DELETE .../members/{member}`) — 10 requests per minute  
+
+Exceeded limits respond with **429 Too Many Requests**.
 
 ### Example: full board in one request
 
@@ -121,8 +148,8 @@ composer test
 php artisan test
 ```
 
-- **Feature:** Auth (register, login, logout), Board CRUD, Column CRUD, Task CRUD
-- **Unit:** Repository layer (Board, Column, Task)
+- **Feature:** Auth, board/column/task CRUD, RBAC, board members (invite, roles, leave, transfer), throttles  
+- **Unit:** Repositories (board, column, task), board role helpers  
 
 ---
 
@@ -134,20 +161,23 @@ app/
 │   ├── Controllers/
 │   │   ├── AuthController.php
 │   │   ├── Board/          # Index, Store, Show, Update, Destroy
+│   │   │   └── Member/     # Index, Invite, Update, Remove, Leave, TransferOwnership
 │   │   ├── Column/         # Index, Store, Update, Destroy (scoped to board)
-│   │   ├── Task/           # Index, Store, Update, Destroy, Move (scoped to column)
+│   │   ├── Task/           # Index, Store, Update, Destroy, Move
 │   │   └── Concerns/
 │   │       └── ParsesIncludes.php   # ?include= parsing for nested responses
 │   ├── Requests/           # Form Requests per action (validation)
-│   └── Resources/          # BoardResource, ColumnResource, TaskResource
-├── Models/                 # User, Board, Column, Task
+│   └── Resources/          # BoardResource, ColumnResource, TaskResource, MemberResource
+├── Models/                 # User, Board, BoardMember, Column, Task
+├── Policies/               # BoardPolicy, ColumnPolicy, TaskPolicy
 └── Repositories/
-    ├── Contracts/          # BoardRepositoryInterface, etc.
-    └── Eloquent/          # Implementations
+    ├── Contracts/
+    └── Eloquent/
 ```
 
 - **Single-responsibility controllers** — one invokable class per action; routes map directly to controller classes.
 - **Repository pattern** — controllers depend on repository interfaces; persistence is swappable and testable.
+- **Policies** — authorization is explicit (`authorize()` in controllers), not hidden in query scopes alone.
 - **API Resources** — consistent JSON shape; nested data via `whenLoaded()` and optional `?include=` query.
 
 ---
@@ -159,8 +189,10 @@ All API errors return JSON with a `message` (and `errors` for validation):
 | Status | When |
 |--------|------|
 | `401` | Missing or invalid token → `{"message": "Unauthenticated."}` |
-| `404` | Board/column/task not found or not owned → `{"message": "Resource not found."}` |
-| `422` | Validation failed → `{"message": "...", "errors": { "field": ["..."] }}` |
+| `403` | Authenticated but not allowed (policy) → `{"message": "..."}` |
+| `404` | Model not found for route binding → `{"message": "Resource not found."}` |
+| `422` | Validation or business rule (e.g. unknown invite email, invalid role change) → `{"message": "...", "errors": { ... }}` |
+| `429` | Too many requests (member invite/remove throttles) |
 
 ---
 

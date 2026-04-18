@@ -4,7 +4,6 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Column;
 use App\Models\Task;
-use App\Models\User;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -30,19 +29,9 @@ class TaskRepository implements TaskRepositoryInterface
         return $column->tasks()->whereKey($taskId)->firstOrFail();
     }
 
-    public function findForUserByIdOrFail(User $user, int $taskId): Task
+    public function findByIdOrFail(int $taskId): Task
     {
-        return Task::query()
-            ->whereKey($taskId)
-            ->whereHas('column.board', function ($query) use ($user) {
-                $query->where(function ($boardQuery) use ($user) {
-                    $boardQuery->where('user_id', $user->id)
-                        ->orWhereHas('members', function ($memberQuery) use ($user) {
-                            $memberQuery->where('user_id', $user->id);
-                        });
-                });
-            })
-            ->firstOrFail();
+        return Task::query()->findOrFail($taskId);
     }
 
     public function update(Task $task, array $attributes): Task
